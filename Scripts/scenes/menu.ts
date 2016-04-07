@@ -69,7 +69,7 @@ module scenes {
          */
         public start(): void {
             this._gameLabel = new createjs.Text(
-                "COIN GAME",
+                "Flatland Radness",
                 "80px Consolas",
                 "#000000");
             this._gameLabel.regX = this._gameLabel.getMeasuredWidth() * 0.5;
