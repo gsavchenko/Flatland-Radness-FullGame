@@ -30,13 +30,6 @@ module scenes {
         private keyboardControls: objects.KeyboardControls;
         private mouseControls: objects.MouseControls;
         private isGrounded: boolean;
-        private coinGeometry: Geometry;
-        private coinMaterial: Physijs.Material;
-        private coins: Physijs.ConcaveMesh[];
-        private coinCount: number;
-        private deathPlaneGeometry: CubeGeometry;
-        private deathPlaneMaterial: Physijs.Material;
-        private deathPlane: Physijs.Mesh;
 
         private prevTime: number;
         private clock: Clock;
@@ -53,15 +46,32 @@ module scenes {
         private wall4;
         private health = 100;
         private score = 0;
-        private collectibleBallGeometry: SphereGeometry;
-        private collectibleBallMaterial: Physijs.Material;
-        private collectibleBall: Physijs.Mesh;
+        private coins: Physijs.Mesh[] = [];
         private boulders: Physijs.Mesh[] = [];
         private numberOfBoulders = 10;
+        private numberOfCoins = 2;
         private gameOver = false;
-        private sphereGeometry: SphereGeometry;
+        private sphereGeometry: SphereGeometry; //for boulders
         private sphereMaterial: Physijs.Material;
         private sphere: Physijs.Mesh;
+        private powerUp: String;
+        private powerUpTime: number;
+        
+        private blue_t = Physijs.createMaterial(new THREE.MeshPhongMaterial({
+                    map: THREE.ImageUtils.loadTexture('../../Assets/images/blue_t.png')
+                    }), 0.4, 0);
+        private yellow_t = Physijs.createMaterial(new THREE.MeshPhongMaterial({
+                    map: THREE.ImageUtils.loadTexture('../../Assets/images/yellow_t.png')
+                    }), 0.4, 0);
+        private red_t = Physijs.createMaterial(new THREE.MeshPhongMaterial({
+                    map: THREE.ImageUtils.loadTexture('../../Assets/images/red_t.png')
+                    }), 0.4, 0);
+        private green_t = Physijs.createMaterial(new THREE.MeshPhongMaterial({
+                    map: THREE.ImageUtils.loadTexture('../../Assets/images/green_t.png')
+                    }), 0.4, 0);
+        private rock_t = Physijs.createMaterial(new THREE.MeshPhongMaterial({
+                    map: THREE.ImageUtils.loadTexture('../../Assets/images/rock_t.png')
+                    }), 0.4, 0);
 
         /**
          * @constructor
@@ -83,7 +93,7 @@ module scenes {
          */
         private _setupCanvas(): void {
             canvas.setAttribute("width", config.Screen.WIDTH.toString());
-            canvas.setAttribute("height", (config.Screen.HEIGHT * 0.1).toString());
+            canvas.setAttribute("height", "0");
             canvas.style.backgroundColor = "#000000";
         }
 
@@ -102,8 +112,11 @@ module scenes {
             // setup canvas for menu scene
             this._setupCanvas();
 
-            this.updatePlayerStats(); // display player stats (health/score) on initialization       
-            this.collectibleBall = undefined; // ball is not in scene
+            this.updatePlayerStats(); // display player stats (health/score) on initialization   
+            this.coins = [];
+            for(var i = 0; i < this.numberOfCoins; i++) {
+                this.coins.push(undefined);
+            }
 
             this.prevTime = 0;
             this.stage = new createjs.Stage(canvas);
@@ -128,7 +141,9 @@ module scenes {
             text2.style.top = 50 + 'px';
             text2.style.left = 50 + 'px';
             text2.innerHTML = "Health: " + this.health + "<br>"
-                + "Score: " + this.score;
+                + "Score: " + this.score + "<br><br>"
+                + "Current Power Up: " + this.powerUp + "<br>"
+                + "Power Up Time Remaining: " + this.powerUpTime;
         }
 
         /**
@@ -175,7 +190,7 @@ module scenes {
             // Ground
             this.groundGeometry = new BoxGeometry(50, 1, 50);
             var wallGeo = new BoxGeometry(50, 1, 15);
-            this.groundMaterial = Physijs.createMaterial(new LambertMaterial({ color: 0xecf0f1 }), 0, 0);            
+            this.groundMaterial = Physijs.createMaterial(new LambertMaterial({ color: 0x00ff00 }), 0, 0);            
             this.ground = new Physijs.ConvexMesh(this.groundGeometry, this.groundMaterial, 0);
             this.ground.receiveShadow = true;
             this.ground.name = "Ground";
@@ -237,19 +252,6 @@ module scenes {
             this.player.rotation.y = 1.5;
             this.add(this.player);
             console.log("Added Player to Scene");
-        }
-
-        /**
-         * This method randomly sets the coin object's position
-         * 
-         * @method setCoinPosition
-         * @return void
-         */
-        private setCoinPosition(coin: Physijs.ConvexMesh): void {
-            var randomPointX: number = Math.floor(Math.random() * 20) - 10;
-            var randomPointZ: number = Math.floor(Math.random() * 20) - 10;
-            coin.position.set(randomPointX, 10, randomPointZ);
-            this.add(coin);
         }
 
         /**
@@ -350,17 +352,16 @@ module scenes {
 
                 } // isGrounded ends
                 
-                // Other objects movement
-                var velocity2 = new Vector3();
-                var direction2 = new Vector3();
-                
-                // Get random number between 0 and 100 to provide more *even* ball movement
+               for (var i = 0; i < this.numberOfCoins; i++) {
+                   var velocity2 = new Vector3();
+                    var direction2 = new Vector3();
+                    var rand = this.getRandomInt(0,100);
+                // Trying to get balls going back and forth
+                 // Get random number between 0 and 100 to provide more *even* ball movement
                 // 0 - 24 = apply force to ball positively along x axis
                 // 25 - 49 = apply force to ball negatively along x axis
                 // 50 - 74 = apply force to ball positively along z axis
                 // 75 - 100 = apply force to ball negatively along z axis
-                var rand = this.getRandomInt(0,100);
-                // Trying to get balls going back and forth
                     if (rand < 25) {
                         velocity2.x += 500 * delta;
                     } else if (rand > 25 && rand < 50) {
@@ -371,13 +372,14 @@ module scenes {
                         velocity2.z -= 500 * delta;
                     }
                     
-                direction2.addVectors(direction2, velocity2);
+                    direction2.addVectors(direction2, velocity2);
                 
                 // If the collecitble ball is NOT undefined give it a rotation and apply force
-                if (this.collectibleBall != undefined) {
-                    direction2.applyQuaternion(this.collectibleBall.quaternion);
-                    this.collectibleBall.applyCentralForce(direction2);
+                    if (this.coins[i] != undefined) {
+                        direction2.applyQuaternion(this.coins[i].quaternion);
+                    this.coins[i].applyCentralForce(direction2);
                 }
+               }
                 
                 // How many boulders to spawn in the different corners 
                 for (var i = 0; i < this.numberOfBoulders; i++) {
@@ -517,15 +519,17 @@ module scenes {
                 if (eventObject.name === "CollectibleBall") {
                     this.score = this.score + 1;
                     
+                    /* George Please Fix
                     if(this.score < 10){
                         this.flashFeedback();
                     } else {
                         this.giveFeedback();
                         createjs.Sound.play("gameover");
-                    }
+                    } */
                     
-                    this.remove(eventObject);
-                    this.collectibleBall = undefined;
+                    var indexId = this.coins.indexOf(eventObject);
+                    this.remove(this.coins[indexId]);
+                    this.coins[indexId] = undefined;
                     this.updatePlayerStats();
                     console.log("Player hit the collectible ball");
                     createjs.Sound.play("bling");
@@ -547,8 +551,8 @@ module scenes {
          * @return void
          */
         private cameraLook(): void {
-            var zenith: number = THREE.Math.degToRad(90);
-            var nadir: number = THREE.Math.degToRad(-90);
+            var zenith: number = THREE.Math.degToRad(30);
+            var nadir: number = THREE.Math.degToRad(-30);
 
             var cameraPitch: number = camera.rotation.x + this.mouseControls.pitch;
 
@@ -630,7 +634,7 @@ module scenes {
                     var zRand = this.getRandomSphereCoordinate();
                     
                     this.sphereGeometry = new SphereGeometry(1, 32, 32);
-                    this.sphereMaterial = Physijs.createMaterial(new LambertMaterial({ color: 0x000000 }), 0.4, 0);
+                    this.sphereMaterial = this.rock_t;
                     this.sphere = new Physijs.SphereMesh(this.sphereGeometry, this.sphereMaterial, 1);
                     this.sphere.position.set(xRand, 5, zRand);
                     this.sphere.receiveShadow = true;
@@ -644,26 +648,43 @@ module scenes {
     
         // Spawn the 'collectible' ball (scores points)
         private spawnCollecibleBall(): void{
-            // Collectible Ball object
-            if (this.collectibleBall == undefined) {
-                var xRand = this.getRandomSphereCoordinate();
-                var zRand = this.getRandomSphereCoordinate();
-                
-                this.collectibleBallGeometry = new SphereGeometry(0.5, 32, 32);
-                this.collectibleBallMaterial = Physijs.createMaterial(new LambertMaterial({ color: 0xffff00 }), 0.4, 0);
-                this.collectibleBall = new Physijs.SphereMesh(this.collectibleBallGeometry, this.collectibleBallMaterial, 1);
-                this.collectibleBall.position.set(xRand, 2, zRand);
-                this.collectibleBall.receiveShadow = true;
-                this.collectibleBall.castShadow = true;
-                this.collectibleBall.name = "CollectibleBall";
-                this.add(this.collectibleBall);
+            // Collectible Ball object            
+            for (var i = 0; i < this.numberOfCoins; i++) {
+                if (this.coins[i] == undefined || this.coins[i].name == "Reset") { // if no coin then add a coin
+                    var xRand = this.getRandomSphereCoordinate();
+                    var zRand = this.getRandomSphereCoordinate();
+                    this.sphereGeometry = new SphereGeometry(0.5, 32, 32);
+                    this.sphereMaterial = this.getCoinMaterial(); //get material randomly (trexture)
+                    this.sphere = new Physijs.SphereMesh(this.sphereGeometry, this.sphereMaterial, 1);
+                    this.sphere.position.set(xRand, 5, zRand);
+                    this.sphere.receiveShadow = true;
+                    this.sphere.castShadow = true;
+                    this.sphere.name = "CollectibleBall";
+                    this.coins[i] = this.sphere;
+                    this.add(this.coins[i]);
+                }
             }
+        }
+        
+        private getCoinMaterial(): Physijs.Material {
+            var returnMaterial: Physijs.Material;
+            var rand = this.getRandomInt(0,100);
+                    if (rand < 70) {
+                        returnMaterial = this.yellow_t;
+                    } else if (rand >= 70 && rand < 80) {
+                        returnMaterial = this.green_t;
+                    } else if (rand >= 80 && rand < 90) {
+                        returnMaterial = this.red_t;
+                    } else {
+                        returnMaterial = this.blue_t;
+                    }
+            return returnMaterial;
         }
         
         // Get random coordinates helper method
         private getRandomSphereCoordinate(): number{
             var ret = 0; // Middle pls rename
-            var intRand = this.getRandomInt(1,100);
+            var intRand = this.getRandomInt(0,100);
             if (intRand > 50) {
                 ret = 20;
             } else {

@@ -53,8 +53,7 @@ var manifest = [
     { id: "yayChord", src: "../../Assets/audio/yaychord.wav" },
     { id: "gameover", src: "../../Assets/audio/gameover.mp3" },
     { id: "gamelost", src: "../../Assets/audio/gamelost.wav" },
-    { id: "StartButton", src: "../../Assets/images/StartButton.png" },
-    { id: "RestartButton", src: "../../Assets/images/RestartButton.png" }
+    { id: "StartButton", src: "../../Assets/images/StartButton.png" }
 ];
 function preload() {
     assets = new createjs.LoadQueue();
