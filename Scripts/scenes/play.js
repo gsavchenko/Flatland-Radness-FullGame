@@ -27,7 +27,7 @@ var scenes;
             this.score = 0;
             this.coins = [];
             this.boulders = [];
-            this.numberOfBoulders = 10;
+            this.numberOfBoulders = 4;
             this.numberOfCoins = 2;
             this.gameOver = false;
             this.blue_t = Physijs.createMaterial(new THREE.MeshPhongMaterial({
@@ -74,10 +74,6 @@ var scenes;
             // setup canvas for menu scene
             this._setupCanvas();
             this.updatePlayerStats(); // display player stats (health/score) on initialization   
-            this.coins = [];
-            for (var i = 0; i < this.numberOfCoins; i++) {
-                this.coins.push(undefined);
-            }
             this.prevTime = 0;
             this.stage = new createjs.Stage(canvas);
             // setup a THREE.JS Clock object
@@ -100,8 +96,7 @@ var scenes;
             text2.style.left = 50 + 'px';
             text2.innerHTML = "Health: " + this.health + "<br>"
                 + "Score: " + this.score + "<br><br>"
-                + "Current Power Up: " + this.powerUp + "<br>"
-                + "Power Up Time Remaining: " + this.powerUpTime;
+                + "Current Power Up: " + this.powerUp + "<br>";
         };
         /**
          * Add a spotLight to the scene
@@ -267,18 +262,22 @@ var scenes;
                 var delta = (time - this.prevTime) / 1000;
                 var direction = new Vector3(0, 0, 0);
                 if (this.isGrounded) {
+                    var curSpeed = 700.0;
+                    if (this.powerUp == "Enhanced Movement") {
+                        curSpeed = 1500.0;
+                    }
                     var direction = new Vector3(0, 0, 0);
                     if (this.keyboardControls.moveForward) {
-                        velocity.z -= 600.0 * delta;
+                        velocity.z -= curSpeed * delta;
                     }
                     if (this.keyboardControls.moveLeft) {
-                        velocity.x -= 600.0 * delta;
+                        velocity.x -= curSpeed * delta;
                     }
                     if (this.keyboardControls.moveBackward) {
-                        velocity.z += 600.0 * delta;
+                        velocity.z += curSpeed * delta;
                     }
                     if (this.keyboardControls.moveRight) {
-                        velocity.x += 600.0 * delta;
+                        velocity.x += curSpeed * delta;
                     }
                     if (this.keyboardControls.jump) {
                         velocity.y += 4000.0 * delta;
@@ -297,58 +296,19 @@ var scenes;
                     }
                     this.cameraLook();
                 } // isGrounded ends
-                for (var i = 0; i < this.numberOfCoins; i++) {
-                    var velocity2 = new Vector3();
-                    var direction2 = new Vector3();
-                    var rand = this.getRandomInt(0, 100);
-                    // Trying to get balls going back and forth
-                    // Get random number between 0 and 100 to provide more *even* ball movement
-                    // 0 - 24 = apply force to ball positively along x axis
-                    // 25 - 49 = apply force to ball negatively along x axis
-                    // 50 - 74 = apply force to ball positively along z axis
-                    // 75 - 100 = apply force to ball negatively along z axis
-                    if (rand < 25) {
-                        velocity2.x += 500 * delta;
-                    }
-                    else if (rand > 25 && rand < 50) {
-                        velocity2.x -= 500 * delta;
-                    }
-                    else if (rand > 50 && rand < 75) {
-                        velocity2.z += 500 * delta;
-                    }
-                    else {
-                        velocity2.z -= 500 * delta;
-                    }
-                    direction2.addVectors(direction2, velocity2);
-                    // If the collecitble ball is NOT undefined give it a rotation and apply force
-                    if (this.coins[i] != undefined) {
-                        direction2.applyQuaternion(this.coins[i].quaternion);
-                        this.coins[i].applyCentralForce(direction2);
-                    }
-                }
+                //coins will move freely once placed, alternatively we can have them 'slowly' move
+                // away from the player.....
                 // How many boulders to spawn in the different corners 
                 for (var i = 0; i < this.numberOfBoulders; i++) {
-                    var velocity3 = new Vector3();
-                    var direction3 = new Vector3();
-                    var rand = this.getRandomInt(0, 100);
-                    if (rand < 25) {
-                        velocity3.x += 500 * delta;
+                    // boulders search for player
+                    var bSpeed = 1.5;
+                    if (this.powerUp == "Enhanced Movement") {
+                        bSpeed = 0.25;
                     }
-                    else if (rand > 25 && rand < 50) {
-                        velocity3.x -= 500 * delta;
-                    }
-                    else if (rand > 50 && rand < 75) {
-                        velocity3.z += 500 * delta;
-                    }
-                    else {
-                        velocity3.z -= 500 * delta;
-                    }
-                    // If boulders are NOT undefined apply a rotation/speed/force
-                    direction3.addVectors(direction3, velocity3);
-                    if (this.boulders[i] != undefined) {
-                        direction3.applyQuaternion(this.boulders[i].quaternion);
-                        this.boulders[i].applyCentralForce(direction3);
-                    }
+                    this.boulders[i].lookAt(this.player.position);
+                    var direction = new Vector3(0, 0, 1.5);
+                    direction.applyQuaternion(this.boulders[i].quaternion);
+                    this.boulders[i].applyCentralForce(direction);
                 }
                 //reset Pitch and Yaw
                 this.mouseControls.pitch = 0;
@@ -420,33 +380,41 @@ var scenes;
                 if (eventObject.name === "Ground") {
                     this.isGrounded = true;
                     createjs.Sound.play("land");
-                    console.log("player hit the ground");
                 }
                 if (eventObject.name === "Boulder") {
-                    this.health = this.health - 1;
-                    if (this.health <= 0) {
-                        this.health = 0;
-                        createjs.Sound.play("gamelost");
-                        // Exit Pointer Lock
-                        document.exitPointerLock();
-                        this.children = []; // an attempt to clean up
-                        this._isGamePaused = true;
-                        // Play the Game Over Scene
-                        currentScene = config.Scene.OVER;
-                        changeScene();
+                    if (this.powerUp == "Boulders are Coins") {
+                        this.score = this.score + 1;
+                        this.updatePlayerStats();
+                        this.powerUp = "N/A";
                     }
-                    this.updatePlayerStats();
-                    console.log("player hit the boulder");
+                    else if (this.powerUp == "Immune") {
+                    }
+                    else {
+                        this.health = this.health - 1;
+                        if (this.health <= 0) {
+                            this.health = 0;
+                            createjs.Sound.play("gamelost");
+                            // Exit Pointer Lock
+                            document.exitPointerLock();
+                            this.children = []; // an attempt to clean up
+                            this._isGamePaused = true;
+                            // Play the Game Over Scene
+                            currentScene = config.Scene.OVER;
+                            changeScene();
+                        }
+                        this.updatePlayerStats();
+                    }
                 }
                 if (eventObject.name === "CollectibleBall") {
                     this.score = this.score + 1;
                     /* George Please Fix
-                    if(this.score < 10){
+                    if (this.score < 10) {
                         this.flashFeedback();
                     } else {
                         this.giveFeedback();
                         createjs.Sound.play("gameover");
                     } */
+                    this.SetPowerUp(eventObject.material);
                     var indexId = this.coins.indexOf(eventObject);
                     this.remove(this.coins[indexId]);
                     this.coins[indexId] = undefined;
@@ -459,6 +427,22 @@ var scenes;
             this.player.add(camera);
             camera.position.set(0, 1, 0);
             this.simulate();
+        };
+        Play.prototype.SetPowerUp = function (material) {
+            switch (material) {
+                case this.yellow_t:
+                    this.powerUp = "N/A";
+                    break;
+                case this.blue_t:
+                    this.powerUp = "Boulders are Coins";
+                    break;
+                case this.red_t:
+                    this.powerUp = "Enhanced Movement";
+                    break;
+                case this.green_t:
+                    this.powerUp = "Immune";
+                    break;
+            }
         };
         /**
          * Camera Look function
@@ -482,6 +466,9 @@ var scenes;
             this.stage.update();
             this.checkSpawns();
             this.checkScores();
+            for (var i = 0; i < this.numberOfBoulders; i++) {
+                this.boulders[i].rotation.x += 0.1;
+            }
             if (!this.keyboardControls.paused) {
                 this.simulate();
             }
@@ -538,12 +525,12 @@ var scenes;
                     var zRand = this.getRandomSphereCoordinate();
                     this.sphereGeometry = new SphereGeometry(1, 32, 32);
                     this.sphereMaterial = this.rock_t;
-                    this.sphere = new Physijs.SphereMesh(this.sphereGeometry, this.sphereMaterial, 1);
+                    this.sphere = new Physijs.SphereMesh(this.sphereGeometry, this.sphereMaterial, 3);
                     this.sphere.position.set(xRand, 5, zRand);
                     this.sphere.receiveShadow = true;
                     this.sphere.castShadow = true;
                     this.sphere.name = "Boulder";
-                    this.boulders.push(this.sphere);
+                    this.boulders[i] = (this.sphere);
                     this.add(this.boulders[i]);
                 }
             }
@@ -553,9 +540,10 @@ var scenes;
         Play.prototype.spawnCollecibleBall = function () {
             // Collectible Ball object            
             for (var i = 0; i < this.numberOfCoins; i++) {
-                if (this.coins[i] == undefined || this.coins[i].name == "Reset") {
-                    var xRand = this.getRandomSphereCoordinate();
-                    var zRand = this.getRandomSphereCoordinate();
+                if (this.coins[i] == undefined) {
+                    //coins can now drop anywhere :) 
+                    var xRand = this.getRandomInt(-20, 20);
+                    var zRand = this.getRandomInt(-20, 20);
                     this.sphereGeometry = new SphereGeometry(0.5, 32, 32);
                     this.sphereMaterial = this.getCoinMaterial(); //get material randomly (trexture)
                     this.sphere = new Physijs.SphereMesh(this.sphereGeometry, this.sphereMaterial, 1);
@@ -563,7 +551,7 @@ var scenes;
                     this.sphere.receiveShadow = true;
                     this.sphere.castShadow = true;
                     this.sphere.name = "CollectibleBall";
-                    this.coins[i] = this.sphere;
+                    this.coins[i] = (this.sphere);
                     this.add(this.coins[i]);
                 }
             }
