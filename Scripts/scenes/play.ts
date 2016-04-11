@@ -22,6 +22,9 @@ module scenes {
         private groundPhysicsMaterial: Physijs.Material;
         private groundMaterial: Physijs.Material;
         private ground: Physijs.Mesh;
+        private lavaGeometry: CubeGeometry;
+        private lavaMaterial: Physijs.Material;
+        private lava: Physijs.Mesh;
         private groundTexture: Texture;
         private groundTextureNormal: Texture;
         private playerGeometry: CubeGeometry;
@@ -55,6 +58,12 @@ module scenes {
         private sphereMaterial: Physijs.Material;
         private sphere: Physijs.Mesh;
         private powerUp: String;
+        private powerCharge = 100
+        private isGroundLava = true;
+        private breakDuration = 1000;
+        private lavaDuration = 500;
+        private breakTimer = this.breakDuration;
+        private lavaTimer = this.lavaDuration;
 
         private blue_t = Physijs.createMaterial(new THREE.MeshPhongMaterial({
             map: THREE.ImageUtils.loadTexture('../../Assets/images/blue_t.png')
@@ -69,9 +78,11 @@ module scenes {
             map: THREE.ImageUtils.loadTexture('../../Assets/images/green_t.png')
         }), 0.4, 0);
         private rock_t = Physijs.createMaterial(new THREE.MeshPhongMaterial({
-            map: THREE.ImageUtils.loadTexture('../../Assets/images/rock_t.png')
+            map: THREE.ImageUtils.loadTexture('../../Assets/images/bear.png')
         }), 0.4, 0);
-
+        private forest_t = Physijs.createMaterial(new THREE.MeshPhongMaterial({
+            map: THREE.ImageUtils.loadTexture('../../Assets/images/forest.png')
+        }), 0.4, 0);
         /**
          * @constructor
          */
@@ -136,7 +147,8 @@ module scenes {
             text2.style.top = 50 + 'px';
             text2.style.left = 50 + 'px';
             text2.innerHTML = "Health: " + this.health + "<br>"
-                + "Score: " + this.score + "<br><br>"
+                + "Score: " + this.score + "<br>"
+                + "Power Charge: " + this.powerCharge + "<br>"
                 + "Current Power Up: " + this.powerUp + "<br>"
         }
 
@@ -167,9 +179,9 @@ module scenes {
             console.log("Added spotLight to scene");
             
             //Add point light
-            this.pointLight = new PointLight(0xffffff, 1, 0);
-            this.pointLight.position.set(0, 50, 0);
-            this.pointLight.castShadow = true;
+            this.pointLight = new PointLight(0xffffff, 0.8, 0);
+            this.pointLight.position.set(0, 1, 0);
+            this.pointLight.castShadow = false;
             this.add(this.pointLight);
             console.log("Added pointLight to scene")
         }
@@ -181,50 +193,77 @@ module scenes {
          * @return void
          */
         private addGround(): void {
-            // Ground
-            this.groundGeometry = new BoxGeometry(50, 1, 50);
             var wallGeo = new BoxGeometry(50, 1, 15);
-            this.groundMaterial = Physijs.createMaterial(new LambertMaterial({ color: 0x00ff00 }), 0, 0);
-            this.ground = new Physijs.ConvexMesh(this.groundGeometry, this.groundMaterial, 0);
-            this.ground.receiveShadow = true;
-            this.ground.name = "Ground";
-            this.add(this.ground);
-            console.log("Added Ground to scene");
+            var wallMat = this.forest_t;
+            
+            this.switchGroundLava();
             
             // Wall One
-            this.wall = new Physijs.ConvexMesh(wallGeo, this.groundMaterial, 0);
+            this.wall = new Physijs.ConvexMesh(wallGeo, wallMat, 0);
             this.wall.receiveShadow = true;
             this.wall.name = "Wall1";
-            this.wall.rotation.x = Math.PI / 2;;
+            this.wall.rotation.x = Math.PI / 2;
             this.wall.position.set(0, 7, -25);
             this.add(this.wall);
             
             // Wall Two
-            this.wall2 = new Physijs.ConvexMesh(wallGeo, this.groundMaterial, 0);
+            this.wall2 = new Physijs.ConvexMesh(wallGeo, wallMat, 0);
             this.wall2.receiveShadow = true;
             this.wall2.name = "Wall2";
-            this.wall2.rotation.x = -Math.PI / 2;;
+            this.wall2.rotation.x = Math.PI / 2;
+            this.wall2.rotation.z = Math.PI;
             this.wall2.position.set(0, 7, 25);
             this.add(this.wall2);
             
             // Wall Three
-            this.wall3 = new Physijs.ConvexMesh(wallGeo, this.groundMaterial, 0);
+            this.wall3 = new Physijs.ConvexMesh(wallGeo, wallMat, 0);
             this.wall3.receiveShadow = true;
             this.wall3.name = "Wall3";
-            this.wall3.rotation.x = -Math.PI / 2;;
-            this.wall3.rotation.z = -Math.PI / 2;;
+            this.wall3.rotation.x = -Math.PI / 2;
+            this.wall3.rotation.z = -Math.PI / 2;
             this.wall3.position.set(25, 7, 0);
             this.add(this.wall3);
             
             // Wall Four
-            this.wall4 = new Physijs.ConvexMesh(wallGeo, this.groundMaterial, 0);
+            this.wall4 = new Physijs.ConvexMesh(wallGeo, wallMat, 0);
             this.wall4.receiveShadow = true;
             this.wall4.name = "Wall4";
-            this.wall4.rotation.x = -Math.PI / 2;;
-            this.wall4.rotation.z = -Math.PI / 2;;
+            this.wall4.rotation.x = Math.PI / 2;
+            this.wall4.rotation.z = -Math.PI / 2;
             this.wall4.position.set(-25, 7, 0);
             this.add(this.wall4);
             console.log("Walls Added");
+        }
+        
+        private switchGroundLava(): void{
+            if (this.isGroundLava){
+                // Ground
+                this.groundGeometry = new BoxGeometry(50, 1, 50);            
+                this.groundMaterial = Physijs.createMaterial(new LambertMaterial({ color: 0x20571b }), 0, 0);
+                this.ground = new Physijs.ConvexMesh(this.groundGeometry, this.groundMaterial, 0);
+                this.ground.receiveShadow = true;
+                this.ground.name = "Ground";
+                this.add(this.ground);
+                if (this.lava != undefined){
+                    this.remove(this.lava);
+                }
+                console.log("Added Ground to scene");
+                this.isGroundLava = false;
+            }
+            else if (!this.isGroundLava){         
+                // Lava
+                this.lavaGeometry = new BoxGeometry(50, 1, 50);            
+                this.lavaMaterial = Physijs.createMaterial(new LambertMaterial({ color: 0xCF1020 }), 0, 0);
+                this.lava = new Physijs.ConvexMesh(this.lavaGeometry, this.lavaMaterial, 0);
+                this.lava.receiveShadow = true;
+                this.lava.name = "Lava";
+                this.add(this.lava);
+                if (this.ground != undefined){
+                    this.remove(this.ground);
+                }
+                console.log("Added Lava to scene");
+                this.isGroundLava = true;
+            }
         }
 
         /**
@@ -308,6 +347,7 @@ module scenes {
                 var time: number = performance.now();
                 var delta: number = (time - this.prevTime) / 1000;
                 var direction = new Vector3(0, 0, 0);
+                var pushUp = new Vector3(0, 25, 0);
 
                 if (this.isGrounded) {
                     var curSpeed = 700.0;
@@ -333,7 +373,28 @@ module scenes {
                             this.isGrounded = false;
                             createjs.Sound.play("jump");
                         }
-
+                    }
+                    if(this.keyboardControls.activatePower){
+                        if(this.powerCharge > 0){
+                            this.powerCharge -= 1;
+                            this.updatePlayerStats();
+                            
+                            // make boulders float
+                            for (var i = 0; i < this.numberOfBoulders; i++) {
+                                //if (this.boulders[i] == undefined) {
+                                    this.boulders[i].applyCentralForce(pushUp);
+                                //}
+                            }
+                            
+                            // make coins float
+                            for (var i = 0; i < this.numberOfCoins; i++) {
+                              //  if (this.coins[i] == undefined) {
+                                    this.coins[i].applyCentralForce(pushUp);
+                              //  }
+                            }
+                            
+                            this.player.applyCentralForce(pushUp);                       
+                        }
                     }
 
                     this.player.setDamping(0.9, 0.1);
@@ -450,7 +511,7 @@ module scenes {
 
             // Collision Check
             this.player.addEventListener('collision', function(eventObject) {
-                if (eventObject.name === "Ground") {
+                if (eventObject.name === "Ground" || eventObject.name === "Lava") {
                     this.isGrounded = true;
                     createjs.Sound.play("land");
                 }
@@ -501,6 +562,19 @@ module scenes {
                     console.log("Player hit the collectible ball");
                     createjs.Sound.play("bling");
 
+                }
+                if (eventObject.name === "Lava"){
+                    this.health = 0;
+                    this.updatePlayerStats();
+                    
+                    // Exit Pointer Lock
+                    document.exitPointerLock();
+                    this.children = []; // an attempt to clean up
+                    this._isGamePaused = true;
+                        
+                    // Play the Game Over Scene
+                    currentScene = config.Scene.OVER;
+                    changeScene();
                 }
             }.bind(this));
 
@@ -558,7 +632,32 @@ module scenes {
             if (!this.keyboardControls.paused) {
                 this.simulate();
             }
-
+            
+            if (this.powerCharge < 100 && !this.keyboardControls.activatePower){
+                this.powerCharge += 1;
+                this.updatePlayerStats();
+            }
+            
+            if(this.breakTimer > 0){
+                this.breakTimer -= 1;
+                
+                if(!this.isGroundLava && this.breakTimer < 500){
+                    this.displayMessage("The ground is going to turn into lava in " + Math.ceil(this.breakTimer/100) + " seconds!");
+                }
+                else {
+                    this.displayMessage("");
+                }
+            }
+            else{
+                this.switchGroundLava();
+                
+                if(this.isGroundLava){
+                    this.breakTimer = this.breakDuration;
+                }
+                if(!this.isGroundLava){
+                    this.breakTimer = this.lavaDuration;
+                }
+            }
         }
 
         /**
@@ -619,7 +718,7 @@ module scenes {
 
                     this.sphereGeometry = new SphereGeometry(1, 32, 32);
                     this.sphereMaterial = this.rock_t;
-                    this.sphere = new Physijs.SphereMesh(this.sphereGeometry, this.sphereMaterial, 3);
+                    this.sphere = new Physijs.SphereMesh(this.sphereGeometry, this.sphereMaterial, 2);
                     this.sphere.position.set(xRand, 5, zRand);
                     this.sphere.receiveShadow = true;
                     this.sphere.castShadow = true;
@@ -639,8 +738,8 @@ module scenes {
                     var xRand = this.getRandomInt(-20, 20);
                     var zRand = this.getRandomInt(-20, 20);
                     this.sphereGeometry = new SphereGeometry(0.5, 32, 32);
-                    this.sphereMaterial = this.getCoinMaterial(); //get material randomly (trexture)
-                    this.sphere = new Physijs.SphereMesh(this.sphereGeometry, this.sphereMaterial, 1);
+                    this.sphereMaterial = this.getCoinMaterial(); //get material randomly (trexture) (learn english)
+                    this.sphere = new Physijs.SphereMesh(this.sphereGeometry, this.sphereMaterial, 2);
                     this.sphere.position.set(xRand, 5, zRand);
                     this.sphere.receiveShadow = true;
                     this.sphere.castShadow = true;

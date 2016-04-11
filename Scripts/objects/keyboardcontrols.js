@@ -30,6 +30,9 @@ var objects;
                 case 32:
                     this.jump = true;
                     break;
+                case 69:
+                    this.activatePower = true;
+                    break;
                 case 81:
                     this.paused = (this.paused) ? false : true;
                     break;
@@ -52,6 +55,9 @@ var objects;
                 case 39: /*right arrow*/
                 case 68:
                     this.moveRight = false;
+                    break;
+                case 69:
+                    this.activatePower = false;
                     break;
                 case 32:
                     this.jump = false;

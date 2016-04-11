@@ -30,6 +30,12 @@ var scenes;
             this.numberOfBoulders = 4;
             this.numberOfCoins = 2;
             this.gameOver = false;
+            this.powerCharge = 100;
+            this.isGroundLava = true;
+            this.breakDuration = 1000;
+            this.lavaDuration = 500;
+            this.breakTimer = this.breakDuration;
+            this.lavaTimer = this.lavaDuration;
             this.blue_t = Physijs.createMaterial(new THREE.MeshPhongMaterial({
                 map: THREE.ImageUtils.loadTexture('../../Assets/images/blue_t.png')
             }), 0.4, 0);
@@ -43,7 +49,10 @@ var scenes;
                 map: THREE.ImageUtils.loadTexture('../../Assets/images/green_t.png')
             }), 0.4, 0);
             this.rock_t = Physijs.createMaterial(new THREE.MeshPhongMaterial({
-                map: THREE.ImageUtils.loadTexture('../../Assets/images/rock_t.png')
+                map: THREE.ImageUtils.loadTexture('../../Assets/images/bear.png')
+            }), 0.4, 0);
+            this.forest_t = Physijs.createMaterial(new THREE.MeshPhongMaterial({
+                map: THREE.ImageUtils.loadTexture('../../Assets/images/forest.png')
             }), 0.4, 0);
             this._initialize();
             this.start();
@@ -95,7 +104,8 @@ var scenes;
             text2.style.top = 50 + 'px';
             text2.style.left = 50 + 'px';
             text2.innerHTML = "Health: " + this.health + "<br>"
-                + "Score: " + this.score + "<br><br>"
+                + "Score: " + this.score + "<br>"
+                + "Power Charge: " + this.powerCharge + "<br>"
                 + "Current Power Up: " + this.powerUp + "<br>";
         };
         /**
@@ -124,9 +134,9 @@ var scenes;
             this.add(this.spotLight);
             console.log("Added spotLight to scene");
             //Add point light
-            this.pointLight = new PointLight(0xffffff, 1, 0);
-            this.pointLight.position.set(0, 50, 0);
-            this.pointLight.castShadow = true;
+            this.pointLight = new PointLight(0xffffff, 0.8, 0);
+            this.pointLight.position.set(0, 1, 0);
+            this.pointLight.castShadow = false;
             this.add(this.pointLight);
             console.log("Added pointLight to scene");
         };
@@ -137,52 +147,71 @@ var scenes;
          * @return void
          */
         Play.prototype.addGround = function () {
-            // Ground
-            this.groundGeometry = new BoxGeometry(50, 1, 50);
             var wallGeo = new BoxGeometry(50, 1, 15);
-            this.groundMaterial = Physijs.createMaterial(new LambertMaterial({ color: 0x00ff00 }), 0, 0);
-            this.ground = new Physijs.ConvexMesh(this.groundGeometry, this.groundMaterial, 0);
-            this.ground.receiveShadow = true;
-            this.ground.name = "Ground";
-            this.add(this.ground);
-            console.log("Added Ground to scene");
+            var wallMat = this.forest_t;
+            this.switchGroundLava();
             // Wall One
-            this.wall = new Physijs.ConvexMesh(wallGeo, this.groundMaterial, 0);
+            this.wall = new Physijs.ConvexMesh(wallGeo, wallMat, 0);
             this.wall.receiveShadow = true;
             this.wall.name = "Wall1";
             this.wall.rotation.x = Math.PI / 2;
-            ;
             this.wall.position.set(0, 7, -25);
             this.add(this.wall);
             // Wall Two
-            this.wall2 = new Physijs.ConvexMesh(wallGeo, this.groundMaterial, 0);
+            this.wall2 = new Physijs.ConvexMesh(wallGeo, wallMat, 0);
             this.wall2.receiveShadow = true;
             this.wall2.name = "Wall2";
-            this.wall2.rotation.x = -Math.PI / 2;
-            ;
+            this.wall2.rotation.x = Math.PI / 2;
+            this.wall2.rotation.z = Math.PI;
             this.wall2.position.set(0, 7, 25);
             this.add(this.wall2);
             // Wall Three
-            this.wall3 = new Physijs.ConvexMesh(wallGeo, this.groundMaterial, 0);
+            this.wall3 = new Physijs.ConvexMesh(wallGeo, wallMat, 0);
             this.wall3.receiveShadow = true;
             this.wall3.name = "Wall3";
             this.wall3.rotation.x = -Math.PI / 2;
-            ;
             this.wall3.rotation.z = -Math.PI / 2;
-            ;
             this.wall3.position.set(25, 7, 0);
             this.add(this.wall3);
             // Wall Four
-            this.wall4 = new Physijs.ConvexMesh(wallGeo, this.groundMaterial, 0);
+            this.wall4 = new Physijs.ConvexMesh(wallGeo, wallMat, 0);
             this.wall4.receiveShadow = true;
             this.wall4.name = "Wall4";
-            this.wall4.rotation.x = -Math.PI / 2;
-            ;
+            this.wall4.rotation.x = Math.PI / 2;
             this.wall4.rotation.z = -Math.PI / 2;
-            ;
             this.wall4.position.set(-25, 7, 0);
             this.add(this.wall4);
             console.log("Walls Added");
+        };
+        Play.prototype.switchGroundLava = function () {
+            if (this.isGroundLava) {
+                // Ground
+                this.groundGeometry = new BoxGeometry(50, 1, 50);
+                this.groundMaterial = Physijs.createMaterial(new LambertMaterial({ color: 0x20571b }), 0, 0);
+                this.ground = new Physijs.ConvexMesh(this.groundGeometry, this.groundMaterial, 0);
+                this.ground.receiveShadow = true;
+                this.ground.name = "Ground";
+                this.add(this.ground);
+                if (this.lava != undefined) {
+                    this.remove(this.lava);
+                }
+                console.log("Added Ground to scene");
+                this.isGroundLava = false;
+            }
+            else if (!this.isGroundLava) {
+                // Lava
+                this.lavaGeometry = new BoxGeometry(50, 1, 50);
+                this.lavaMaterial = Physijs.createMaterial(new LambertMaterial({ color: 0xCF1020 }), 0, 0);
+                this.lava = new Physijs.ConvexMesh(this.lavaGeometry, this.lavaMaterial, 0);
+                this.lava.receiveShadow = true;
+                this.lava.name = "Lava";
+                this.add(this.lava);
+                if (this.ground != undefined) {
+                    this.remove(this.ground);
+                }
+                console.log("Added Lava to scene");
+                this.isGroundLava = true;
+            }
         };
         /**
          * Adds the player controller to the scene
@@ -261,6 +290,7 @@ var scenes;
                 var time = performance.now();
                 var delta = (time - this.prevTime) / 1000;
                 var direction = new Vector3(0, 0, 0);
+                var pushUp = new Vector3(0, 25, 0);
                 if (this.isGrounded) {
                     var curSpeed = 700.0;
                     if (this.powerUp == "Enhanced Movement") {
@@ -284,6 +314,23 @@ var scenes;
                         if (this.player.position.y > 2) {
                             this.isGrounded = false;
                             createjs.Sound.play("jump");
+                        }
+                    }
+                    if (this.keyboardControls.activatePower) {
+                        if (this.powerCharge > 0) {
+                            this.powerCharge -= 1;
+                            this.updatePlayerStats();
+                            // make boulders float
+                            for (var i = 0; i < this.numberOfBoulders; i++) {
+                                //if (this.boulders[i] == undefined) {
+                                this.boulders[i].applyCentralForce(pushUp);
+                            }
+                            // make coins float
+                            for (var i = 0; i < this.numberOfCoins; i++) {
+                                //  if (this.coins[i] == undefined) {
+                                this.coins[i].applyCentralForce(pushUp);
+                            }
+                            this.player.applyCentralForce(pushUp);
                         }
                     }
                     this.player.setDamping(0.9, 0.1);
@@ -377,7 +424,7 @@ var scenes;
             this.addPlayer();
             // Collision Check
             this.player.addEventListener('collision', function (eventObject) {
-                if (eventObject.name === "Ground") {
+                if (eventObject.name === "Ground" || eventObject.name === "Lava") {
                     this.isGrounded = true;
                     createjs.Sound.play("land");
                 }
@@ -421,6 +468,17 @@ var scenes;
                     this.updatePlayerStats();
                     console.log("Player hit the collectible ball");
                     createjs.Sound.play("bling");
+                }
+                if (eventObject.name === "Lava") {
+                    this.health = 0;
+                    this.updatePlayerStats();
+                    // Exit Pointer Lock
+                    document.exitPointerLock();
+                    this.children = []; // an attempt to clean up
+                    this._isGamePaused = true;
+                    // Play the Game Over Scene
+                    currentScene = config.Scene.OVER;
+                    changeScene();
                 }
             }.bind(this));
             // create parent-child relationship with camera and player
@@ -466,11 +524,30 @@ var scenes;
             this.stage.update();
             this.checkSpawns();
             this.checkScores();
-            for (var i = 0; i < this.numberOfBoulders; i++) {
-                this.boulders[i].rotation.x += 0.1;
-            }
             if (!this.keyboardControls.paused) {
                 this.simulate();
+            }
+            if (this.powerCharge < 100 && !this.keyboardControls.activatePower) {
+                this.powerCharge += 1;
+                this.updatePlayerStats();
+            }
+            if (this.breakTimer > 0) {
+                this.breakTimer -= 1;
+                if (!this.isGroundLava && this.breakTimer < 500) {
+                    this.displayMessage("The ground is going to turn into lava in " + Math.ceil(this.breakTimer / 100) + " seconds!");
+                }
+                else {
+                    this.displayMessage("");
+                }
+            }
+            else {
+                this.switchGroundLava();
+                if (this.isGroundLava) {
+                    this.breakTimer = this.breakDuration;
+                }
+                if (!this.isGroundLava) {
+                    this.breakTimer = this.lavaDuration;
+                }
             }
         };
         /**
@@ -525,7 +602,7 @@ var scenes;
                     var zRand = this.getRandomSphereCoordinate();
                     this.sphereGeometry = new SphereGeometry(1, 32, 32);
                     this.sphereMaterial = this.rock_t;
-                    this.sphere = new Physijs.SphereMesh(this.sphereGeometry, this.sphereMaterial, 3);
+                    this.sphere = new Physijs.SphereMesh(this.sphereGeometry, this.sphereMaterial, 2);
                     this.sphere.position.set(xRand, 5, zRand);
                     this.sphere.receiveShadow = true;
                     this.sphere.castShadow = true;
@@ -545,8 +622,8 @@ var scenes;
                     var xRand = this.getRandomInt(-20, 20);
                     var zRand = this.getRandomInt(-20, 20);
                     this.sphereGeometry = new SphereGeometry(0.5, 32, 32);
-                    this.sphereMaterial = this.getCoinMaterial(); //get material randomly (trexture)
-                    this.sphere = new Physijs.SphereMesh(this.sphereGeometry, this.sphereMaterial, 1);
+                    this.sphereMaterial = this.getCoinMaterial(); //get material randomly (trexture) (learn english)
+                    this.sphere = new Physijs.SphereMesh(this.sphereGeometry, this.sphereMaterial, 2);
                     this.sphere.position.set(xRand, 5, zRand);
                     this.sphere.receiveShadow = true;
                     this.sphere.castShadow = true;

@@ -9,6 +9,7 @@ module objects {
         public jump: boolean;
         public enabled: boolean;
         public paused: boolean;
+        public activatePower: boolean;
         // CONSTRUCTOR ++++++++++++++++++++++++++    
         constructor() {
             this.enabled = false;
@@ -39,6 +40,9 @@ module objects {
                 case 32: /* Spacebar */
                     this.jump = true;
                     break;
+                case 69: /* E Key */
+                    this.activatePower = true;
+                    break;
                 case 81: /* pause */
                     this.paused = (this.paused) ? false : true;
                     break;
@@ -62,6 +66,9 @@ module objects {
                 case 39: /*right arrow*/
                 case 68: /* D Key */
                     this.moveRight = false;
+                    break;
+                case 69: /* E Key */
+                    this.activatePower = false;
                     break;
                 case 32: /* Spacebar */
                     this.jump = false;

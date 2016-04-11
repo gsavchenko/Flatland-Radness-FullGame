@@ -144,7 +144,7 @@ function gameLoop(): void {
 // Setup default renderer
 function setupRenderer(): void {
     renderer = new Renderer({ antialias: true });
-    renderer.setClearColor(0x404040, 1.0);
+    renderer.setClearColor(0x1da2ba, 1.0);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(CScreen.WIDTH, CScreen.HEIGHT);
     renderer.shadowMap.enabled = true;

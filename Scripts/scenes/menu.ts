@@ -36,7 +36,7 @@ module scenes {
         private _setupCanvas(): void {
             canvas.style.width = "100%";
             canvas.setAttribute("height", config.Screen.HEIGHT.toString());
-            canvas.style.backgroundColor = "#ffffff";
+            canvas.style.backgroundImage = "url('../../Assets/images/menu1.png')";
         }
 
 
@@ -70,7 +70,7 @@ module scenes {
         public start(): void {
             this._gameLabel = new createjs.Text(
                 "Flatland Radness",
-                "80px Consolas",
+                "80px Motorwerk",
                 "#000000");
             this._gameLabel.regX = this._gameLabel.getMeasuredWidth() * 0.5;
             this._gameLabel.regY = this._gameLabel.getMeasuredLineHeight() * 0.5;
