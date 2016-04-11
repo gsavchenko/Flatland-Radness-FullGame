@@ -18,6 +18,8 @@ module scenes {
         private _stage: createjs.Stage;
         private _gameLabel: createjs.Text;
         private _startButton: createjs.Bitmap;
+        private _exitButton: createjs.Bitmap;
+        private _instructionsButton: createjs.Bitmap;
 
         /**
          * Empty Constructor - calls _initialize and start methods
@@ -71,7 +73,7 @@ module scenes {
             this._gameLabel = new createjs.Text(
                 "Flatland Radness",
                 "80px Motorwerk",
-                "#000000");
+                "#ffffff");
             this._gameLabel.regX = this._gameLabel.getMeasuredWidth() * 0.5;
             this._gameLabel.regY = this._gameLabel.getMeasuredLineHeight() * 0.5;
             this._gameLabel.x = config.Screen.WIDTH * 0.5;
@@ -81,9 +83,23 @@ module scenes {
             this._startButton = new createjs.Bitmap(assets.getResult("StartButton"));
             this._startButton.regX = this._startButton.getBounds().width * 0.5;
             this._startButton.regY = this._startButton.getBounds().height * 0.5;
-            this._startButton.x = config.Screen.WIDTH * 0.5;
+            this._startButton.x = config.Screen.WIDTH * 0.5 - 100;
             this._startButton.y = (config.Screen.HEIGHT * 0.5) + 100;
             this._stage.addChild(this._startButton);
+            
+            this._exitButton = new createjs.Bitmap(assets.getResult("ExitButton"));
+            this._exitButton.regX = this._exitButton.getBounds().width * 0.5;
+            this._exitButton.regY = this._exitButton.getBounds().height * 0.5;
+            this._exitButton.x = config.Screen.WIDTH * 0.5 + 200;
+            this._exitButton.y = (config.Screen.HEIGHT * 0.5) + 100;
+            this._stage.addChild(this._exitButton);
+            
+            this._instructionsButton = new createjs.Bitmap(assets.getResult("InstructionsButton"));
+            this._instructionsButton.regX = this._instructionsButton.getBounds().width * 0.5;
+            this._instructionsButton.regY = this._instructionsButton.getBounds().height * 0.5;
+            this._instructionsButton.x = config.Screen.WIDTH * 0.5 - 400;
+            this._instructionsButton.y = (config.Screen.HEIGHT * 0.5) + 100;
+            this._stage.addChild(this._instructionsButton);
 
             this._startButton.on("mouseover", (event: createjs.MouseEvent) => {
                 event.target.alpha = 0.7;
@@ -96,6 +112,30 @@ module scenes {
             this._startButton.on("click", (event: createjs.MouseEvent) => {
                 currentScene = config.Scene.PLAY;
                 changeScene();
+            });
+            
+            this._exitButton.on("mouseover", (event: createjs.MouseEvent) => {
+                event.target.alpha = 0.7;
+            });
+
+            this._exitButton.on("mouseout", (event: createjs.MouseEvent) => {
+                event.target.alpha = 1.0;
+            });
+
+            this._exitButton.on("click", (event: createjs.MouseEvent) => {
+                window.open('', '_self', ''); window.close();
+            });
+            
+            this._instructionsButton.on("mouseover", (event: createjs.MouseEvent) => {
+                event.target.alpha = 0.7;
+            });
+
+            this._instructionsButton.on("mouseout", (event: createjs.MouseEvent) => {
+                event.target.alpha = 1.0;
+            });
+
+            this._instructionsButton.on("click", (event: createjs.MouseEvent) => {
+                window.open('', '_self', ''); window.close();
             });
         }
 

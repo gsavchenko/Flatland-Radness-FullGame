@@ -525,19 +525,6 @@ module scenes {
                     } else {
                         this.health = this.health - 1;
                         
-                        if (this.health <= 0) {
-                            this.health = 0;
-                            createjs.Sound.play("gamelost");
-                        
-                            // Exit Pointer Lock
-                            document.exitPointerLock();
-                            this.children = []; // an attempt to clean up
-                            this._isGamePaused = true;
-                        
-                            // Play the Game Over Scene
-                            currentScene = config.Scene.OVER;
-                            changeScene();
-                        }
                         this.updatePlayerStats();
                     }
                 }
@@ -566,15 +553,6 @@ module scenes {
                 if (eventObject.name === "Lava"){
                     this.health = 0;
                     this.updatePlayerStats();
-                    
-                    // Exit Pointer Lock
-                    document.exitPointerLock();
-                    this.children = []; // an attempt to clean up
-                    this._isGamePaused = true;
-                        
-                    // Play the Game Over Scene
-                    currentScene = config.Scene.OVER;
-                    changeScene();
                 }
             }.bind(this));
 
@@ -627,7 +605,6 @@ module scenes {
             this.checkControls();
             this.stage.update();
             this.checkSpawns();
-            this.checkScores();
 
             if (!this.keyboardControls.paused) {
                 this.simulate();
@@ -641,8 +618,10 @@ module scenes {
             if(this.breakTimer > 0){
                 this.breakTimer -= 1;
                 
-                if(!this.isGroundLava && this.breakTimer < 500){
-                    this.displayMessage("The ground is going to turn into lava in " + Math.ceil(this.breakTimer/100) + " seconds!");
+                if(!this.isGroundLava && this.breakTimer < 500 ){
+                    if(this.health > 0){
+                        this.displayMessage("The ground is going to turn into lava in " + Math.ceil(this.breakTimer/100) + " seconds!");
+                    }
                 }
                 else {
                     this.displayMessage("");
@@ -651,12 +630,24 @@ module scenes {
             else{
                 this.switchGroundLava();
                 
-                if(this.isGroundLava){
-                    this.breakTimer = this.breakDuration;
-                }
                 if(!this.isGroundLava){
-                    this.breakTimer = this.lavaDuration;
+                    this.breakTimer = this.breakDuration;
+                    console.log("reached here 1");
                 }
+                if(this.isGroundLava){
+                    this.breakTimer = this.lavaDuration;
+                    console.log("reached here 2");
+                }
+            }
+            
+            if (this.isGameOver()){
+                // Exit Pointer Lock
+                document.exitPointerLock();
+                this.children = []; // an attempt to clean up
+                
+                // Play the Game Over Scene
+                currentScene = config.Scene.OVER;
+                changeScene();
             }
         }
 
@@ -672,21 +663,12 @@ module scenes {
         }
         
         // Function that checks scores and game over (contantly looped)
-        private checkScores(): void {
-            var btnString = "<br><br><br>Press 'R' + 'Y' to restart the game...";
-
-            if (this.health <= 0) {
-                // Player lost, show message and restart
-                this.health = 0;
-                this.displayMessage("You lost... :'( Try again!" + btnString);
-                this.gameOver = true;
-            } else if (this.score >= 10) {
-                // Player won, show message and restart
-                this.displayMessage("You win yeah! :)" + btnString);
-                this.gameOver = true;
-
-            } else {
-                this.gameOver = false;
+        private isGameOver(): boolean{
+            if(this.health <= 0 || this.score >= 10){
+                return true;
+            } 
+            else {
+                return false;
             }
         }
         
