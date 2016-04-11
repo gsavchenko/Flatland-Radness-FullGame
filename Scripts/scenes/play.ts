@@ -641,7 +641,7 @@ module scenes {
             if(this.breakTimer > 0){
                 this.breakTimer -= 1;
                 
-                if(!this.isGroundLava && this.breakTimer < 500){
+                if(!this.isGroundLava && this.breakTimer < 500) {
                     this.displayMessage("The ground is going to turn into lava in " + Math.ceil(this.breakTimer/100) + " seconds!");
                 }
                 else {
@@ -651,10 +651,10 @@ module scenes {
             else{
                 this.switchGroundLava();
                 
-                if(this.isGroundLava){
+                if(!this.isGroundLava){
                     this.breakTimer = this.breakDuration;
                 }
-                if(!this.isGroundLava){
+                if(this.isGroundLava){
                     this.breakTimer = this.lavaDuration;
                 }
             }

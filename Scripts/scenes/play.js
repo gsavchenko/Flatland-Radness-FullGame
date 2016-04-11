@@ -542,10 +542,10 @@ var scenes;
             }
             else {
                 this.switchGroundLava();
-                if (this.isGroundLava) {
+                if (!this.isGroundLava) {
                     this.breakTimer = this.breakDuration;
                 }
-                if (!this.isGroundLava) {
+                if (this.isGroundLava) {
                     this.breakTimer = this.lavaDuration;
                 }
             }
