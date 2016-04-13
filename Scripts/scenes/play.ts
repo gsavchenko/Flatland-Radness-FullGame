@@ -40,7 +40,7 @@ module scenes {
         private stage: createjs.Stage;
         private scoreLabel: createjs.Text;
         private livesLabel: createjs.Text;
-        private scoreValue: number;
+        private currentLevel: number = 1;
 
         private wall;
         private wall1;
@@ -49,16 +49,20 @@ module scenes {
         private wall4;
         private health = 100;
         private score = 0;
+        // real important game objects
         private coins: Physijs.Mesh[] = [];
         private boulders: Physijs.Mesh[] = [];
+        private platforms: Physijs.Mesh[] = [];
         private numberOfBoulders = 4;
         private numberOfCoins = 2;
+        private numberOfPlatforms = 0;
+
         private gameOver = false;
         private sphereGeometry: SphereGeometry; //for boulders
         private sphereMaterial: Physijs.Material;
         private sphere: Physijs.Mesh;
         private powerUp: String;
-        private powerCharge = 100
+        private powerCharge = 100;
         private isGroundLava = true;
         private breakDuration = 1000;
         private lavaDuration = 500;
@@ -143,13 +147,14 @@ module scenes {
         private updatePlayerStats(): void {
             var text2 = document.getElementById("playerStats");
             text2.style.color = "white"
-            text2.style.fontSize = "20";
+            text2.style.fontSize = "20px";
             text2.style.top = 50 + 'px';
             text2.style.left = 50 + 'px';
             text2.innerHTML = "Health: " + this.health + "<br>"
                 + "Score: " + this.score + "<br>"
                 + "Power Charge: " + this.powerCharge + "<br>"
                 + "Current Power Up: " + this.powerUp + "<br>"
+                + "Current Level: " + this.currentLevel + "<br>";
         }
 
         /**
@@ -195,7 +200,7 @@ module scenes {
         private addGround(): void {
             var wallGeo = new BoxGeometry(50, 1, 15);
             var wallMat = this.forest_t;
-            
+
             this.switchGroundLava();
             
             // Wall One
@@ -234,31 +239,31 @@ module scenes {
             this.add(this.wall4);
             console.log("Walls Added");
         }
-        
-        private switchGroundLava(): void{
-            if (this.isGroundLava){
+
+        private switchGroundLava(): void {
+            if (this.isGroundLava) {
                 // Ground
-                this.groundGeometry = new BoxGeometry(50, 1, 50);            
+                this.groundGeometry = new BoxGeometry(50, 1, 50);
                 this.groundMaterial = Physijs.createMaterial(new LambertMaterial({ color: 0x20571b }), 0, 0);
                 this.ground = new Physijs.ConvexMesh(this.groundGeometry, this.groundMaterial, 0);
                 this.ground.receiveShadow = true;
                 this.ground.name = "Ground";
                 this.add(this.ground);
-                if (this.lava != undefined){
+                if (this.lava != undefined) {
                     this.remove(this.lava);
                 }
                 console.log("Added Ground to scene");
                 this.isGroundLava = false;
             }
-            else if (!this.isGroundLava){         
+            else if (!this.isGroundLava) {         
                 // Lava
-                this.lavaGeometry = new BoxGeometry(50, 1, 50);            
+                this.lavaGeometry = new BoxGeometry(50, 1, 50);
                 this.lavaMaterial = Physijs.createMaterial(new LambertMaterial({ color: 0xCF1020 }), 0, 0);
                 this.lava = new Physijs.ConvexMesh(this.lavaGeometry, this.lavaMaterial, 0);
                 this.lava.receiveShadow = true;
                 this.lava.name = "Lava";
                 this.add(this.lava);
-                if (this.ground != undefined){
+                if (this.ground != undefined) {
                     this.remove(this.ground);
                 }
                 console.log("Added Lava to scene");
@@ -301,6 +306,14 @@ module scenes {
                 this.blocker.style.display = 'none';
             } else {
                 if (this.health <= 0) {
+                    this.blocker.style.display = 'none';
+                    document.removeEventListener('pointerlockchange', this.pointerLockChange.bind(this), false);
+                    document.removeEventListener('mozpointerlockchange', this.pointerLockChange.bind(this), false);
+                    document.removeEventListener('webkitpointerlockchange', this.pointerLockChange.bind(this), false);
+                    document.removeEventListener('pointerlockerror', this.pointerLockError.bind(this), false);
+                    document.removeEventListener('mozpointerlockerror', this.pointerLockError.bind(this), false);
+                    document.removeEventListener('webkitpointerlockerror', this.pointerLockError.bind(this), false);
+                } else if (this.currentLevel == 3 && this.score == 30) {
                     this.blocker.style.display = 'none';
                     document.removeEventListener('pointerlockchange', this.pointerLockChange.bind(this), false);
                     document.removeEventListener('mozpointerlockchange', this.pointerLockChange.bind(this), false);
@@ -374,26 +387,26 @@ module scenes {
                             createjs.Sound.play("jump");
                         }
                     }
-                    if(this.keyboardControls.activatePower){
-                        if(this.powerCharge > 0){
-                            this.powerCharge -= 1;
+                    if (this.keyboardControls.activatePower) {
+                        if (this.powerCharge > 0) {
+                            this.powerCharge -= 1.5;
                             this.updatePlayerStats();
                             
                             // make boulders float
                             for (var i = 0; i < this.numberOfBoulders; i++) {
                                 //if (this.boulders[i] == undefined) {
-                                    this.boulders[i].applyCentralForce(pushUp);
+                                this.boulders[i].applyCentralForce(pushUp);
                                 //}
                             }
                             
                             // make coins float
                             for (var i = 0; i < this.numberOfCoins; i++) {
-                              //  if (this.coins[i] == undefined) {
+                                if (this.coins[i] != undefined) {
                                     this.coins[i].applyCentralForce(pushUp);
-                              //  }
+                                }
                             }
-                            
-                            this.player.applyCentralForce(pushUp);                       
+
+                            this.player.applyCentralForce(pushUp);
                         }
                     }
 
@@ -421,10 +434,12 @@ module scenes {
                     if (this.powerUp == "Enhanced Movement") {
                         bSpeed = 0.25;
                     }
-                    this.boulders[i].lookAt(this.player.position);
-                    var direction = new Vector3(0, 0, 1.5);
-                    direction.applyQuaternion(this.boulders[i].quaternion);
-                    this.boulders[i].applyCentralForce(direction);
+                    if (this.boulders[i] != undefined) {
+                        this.boulders[i].lookAt(this.player.position);
+                        var direction = new Vector3(0, 0, 1.5);
+                        direction.applyQuaternion(this.boulders[i].quaternion);
+                        this.boulders[i].applyCentralForce(direction);
+                    }
                 }
 
                 //reset Pitch and Yaw
@@ -519,12 +534,12 @@ module scenes {
                     if (this.powerUp == "Boulders are Coins") {
                         this.score = this.score + 1;
                         this.updatePlayerStats();
-                        this.powerUp = "N/A";                
+                        this.powerUp = "N/A";
                     } else if (this.powerUp == "Immune") {
                         //nothing should happen here dude.
                     } else {
                         this.health = this.health - 1;
-                        
+
                         this.updatePlayerStats();
                     }
                 }
@@ -550,7 +565,7 @@ module scenes {
                     createjs.Sound.play("bling");
 
                 }
-                if (eventObject.name === "Lava"){
+                if (eventObject.name === "Lava") {
                     this.health = 0;
                     this.updatePlayerStats();
                 }
@@ -580,6 +595,41 @@ module scenes {
             }
         }
 
+        public determineLevels() {
+            //set the current level based on current score
+            if (this.score < 10) {
+                this.currentLevel = 1;
+            } else if (this.score > 9 && this.score < 20) {
+                this.currentLevel = 2;
+            } else if (this.score > 19) {
+                this.currentLevel = 3;
+            }
+            //set the current game object maximums based on current level
+            if (this.currentLevel == 1) {
+                this.numberOfBoulders = 4;
+                this.numberOfCoins = 2;
+                this.numberOfPlatforms = 2;
+            } else if (this.currentLevel == 2) {
+                this.numberOfBoulders = 8;
+                this.numberOfCoins = 3;
+                this.numberOfPlatforms = 1;
+            } else if (this.currentLevel == 3) {
+                this.numberOfBoulders = 16;
+                this.numberOfCoins = 4;
+                this.numberOfPlatforms = 0;
+            }
+            
+            //Reset plaforms if the current level has changed
+            if (this.numberOfPlatforms != this.platforms.length) {
+                for (var i = 0; i < this.platforms.length; i++) {
+                    if (this.platforms[i] != undefined) {
+                        this.remove(this.platforms[i]);
+                        this.platforms.splice(i, 1);
+                    }
+                }
+            }
+        }
+
         /**
          * Camera Look function
          * 
@@ -605,42 +655,43 @@ module scenes {
             this.checkControls();
             this.stage.update();
             this.checkSpawns();
+            this.determineLevels();
 
             if (!this.keyboardControls.paused) {
                 this.simulate();
             }
-            
-            if (this.powerCharge < 100 && !this.keyboardControls.activatePower){
+
+            if (this.powerCharge < 100 && !this.keyboardControls.activatePower) {
                 this.powerCharge += 1;
                 this.updatePlayerStats();
             }
-            
-            if(this.breakTimer > 0){
+
+            if (this.breakTimer > 0) {
                 this.breakTimer -= 1;
-                
-                if(!this.isGroundLava && this.breakTimer < 500 ){
-                    if(this.health > 0){
-                        this.displayMessage("The ground is going to turn into lava in " + Math.ceil(this.breakTimer/100) + " seconds!");
+
+                if (!this.isGroundLava && this.breakTimer < 500) {
+                    if (this.health > 0) {
+                        this.displayMessage("The ground is going to turn into lava in " + Math.ceil(this.breakTimer / 100) + " seconds!");
                     }
                 }
                 else {
                     this.displayMessage("");
                 }
             }
-            else{
+            else {
                 this.switchGroundLava();
-                
-                if(!this.isGroundLava){
+
+                if (!this.isGroundLava) {
                     this.breakTimer = this.breakDuration;
                     console.log("reached here 1");
                 }
-                if(this.isGroundLava){
+                if (this.isGroundLava) {
                     this.breakTimer = this.lavaDuration;
                     console.log("reached here 2");
                 }
             }
-            
-            if (this.isGameOver()){
+
+            if (this.isGameOver()) {
                 // Exit Pointer Lock
                 document.exitPointerLock();
                 this.children = []; // an attempt to clean up
@@ -663,10 +714,10 @@ module scenes {
         }
         
         // Function that checks scores and game over (contantly looped)
-        private isGameOver(): boolean{
-            if(this.health <= 0 || this.score >= 10){
+        private isGameOver(): boolean {
+            if (this.health <= 0 || this.score >= 30) {
                 return true;
-            } 
+            }
             else {
                 return false;
             }
@@ -688,6 +739,7 @@ module scenes {
         private checkSpawns(): void {
             this.spawnBoulders();
             this.spawnCollecibleBall();
+            this.spawnPlatforms(); // add platforms to make game easier;
         }
         
         // Spawn boulders (do damage)
@@ -728,6 +780,25 @@ module scenes {
                     this.sphere.name = "CollectibleBall";
                     this.coins[i] = (this.sphere);
                     this.add(this.coins[i]);
+                }
+            }
+        }
+
+        private spawnPlatforms(): void {
+            for (var i = 0; i < this.numberOfPlatforms; i++) {
+                if (this.platforms[i] == undefined) { // if no coin then add a coin
+                    //coins can now drop anywhere :) 
+                    var xRand = this.getRandomInt(-20, 20);
+                    var zRand = this.getRandomInt(-20, 20);
+                    var cubeGeo = new CubeGeometry(3, 3, 4);
+                    var cubeMaterial = Physijs.createMaterial(new LambertMaterial({ color: 0xaa000a }), 0, 0); // George is an asshole about everything I do. </3
+                    var platform = new Physijs.BoxMesh(cubeGeo, cubeMaterial, 100);
+                    platform.position.set(xRand, 5, zRand);
+                    platform.receiveShadow = true;
+                    platform.castShadow = true;
+                    platform.name = "Platform";
+                    this.platforms[i] = (platform);
+                    this.add(this.platforms[i]);
                 }
             }
         }

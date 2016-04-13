@@ -37,9 +37,10 @@ module objects {
                 case 68: /* D Key */
                     this.moveRight = true;
                     break;
-                case 32: /* Spacebar */
-                    this.jump = true;
-                    break;
+                //case 32: /* Spacebar */
+                   // this.jump = true;
+                    //break;
+                    //screw jumping
                 case 69: /* E Key */
                     this.activatePower = true;
                     break;
@@ -70,9 +71,10 @@ module objects {
                 case 69: /* E Key */
                     this.activatePower = false;
                     break;
-                case 32: /* Spacebar */
-                    this.jump = false;
-                    break;
+                //case 32: /* Spacebar */
+                    //this.jump = false;
+                    //break;
+                    //screw jumping
             }
         }
     }

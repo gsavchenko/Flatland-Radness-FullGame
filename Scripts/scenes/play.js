@@ -23,12 +23,16 @@ var scenes;
          */
         function Play() {
             _super.call(this);
+            this.currentLevel = 1;
             this.health = 100;
             this.score = 0;
+            // real important game objects
             this.coins = [];
             this.boulders = [];
+            this.platforms = [];
             this.numberOfBoulders = 4;
             this.numberOfCoins = 2;
+            this.numberOfPlatforms = 0;
             this.gameOver = false;
             this.powerCharge = 100;
             this.isGroundLava = true;
@@ -100,13 +104,14 @@ var scenes;
         Play.prototype.updatePlayerStats = function () {
             var text2 = document.getElementById("playerStats");
             text2.style.color = "white";
-            text2.style.fontSize = "20";
+            text2.style.fontSize = "20px";
             text2.style.top = 50 + 'px';
             text2.style.left = 50 + 'px';
             text2.innerHTML = "Health: " + this.health + "<br>"
                 + "Score: " + this.score + "<br>"
                 + "Power Charge: " + this.powerCharge + "<br>"
-                + "Current Power Up: " + this.powerUp + "<br>";
+                + "Current Power Up: " + this.powerUp + "<br>"
+                + "Current Level: " + this.currentLevel + "<br>";
         };
         /**
          * Add a spotLight to the scene
@@ -255,6 +260,15 @@ var scenes;
                     document.removeEventListener('mozpointerlockerror', this.pointerLockError.bind(this), false);
                     document.removeEventListener('webkitpointerlockerror', this.pointerLockError.bind(this), false);
                 }
+                else if (this.currentLevel == 3 && this.score == 30) {
+                    this.blocker.style.display = 'none';
+                    document.removeEventListener('pointerlockchange', this.pointerLockChange.bind(this), false);
+                    document.removeEventListener('mozpointerlockchange', this.pointerLockChange.bind(this), false);
+                    document.removeEventListener('webkitpointerlockchange', this.pointerLockChange.bind(this), false);
+                    document.removeEventListener('pointerlockerror', this.pointerLockError.bind(this), false);
+                    document.removeEventListener('mozpointerlockerror', this.pointerLockError.bind(this), false);
+                    document.removeEventListener('webkitpointerlockerror', this.pointerLockError.bind(this), false);
+                }
                 else {
                     this.blocker.style.display = '-webkit-box';
                     this.blocker.style.display = '-moz-box';
@@ -318,7 +332,7 @@ var scenes;
                     }
                     if (this.keyboardControls.activatePower) {
                         if (this.powerCharge > 0) {
-                            this.powerCharge -= 1;
+                            this.powerCharge -= 1.5;
                             this.updatePlayerStats();
                             // make boulders float
                             for (var i = 0; i < this.numberOfBoulders; i++) {
@@ -327,8 +341,9 @@ var scenes;
                             }
                             // make coins float
                             for (var i = 0; i < this.numberOfCoins; i++) {
-                                //  if (this.coins[i] == undefined) {
-                                this.coins[i].applyCentralForce(pushUp);
+                                if (this.coins[i] != undefined) {
+                                    this.coins[i].applyCentralForce(pushUp);
+                                }
                             }
                             this.player.applyCentralForce(pushUp);
                         }
@@ -352,10 +367,12 @@ var scenes;
                     if (this.powerUp == "Enhanced Movement") {
                         bSpeed = 0.25;
                     }
-                    this.boulders[i].lookAt(this.player.position);
-                    var direction = new Vector3(0, 0, 1.5);
-                    direction.applyQuaternion(this.boulders[i].quaternion);
-                    this.boulders[i].applyCentralForce(direction);
+                    if (this.boulders[i] != undefined) {
+                        this.boulders[i].lookAt(this.player.position);
+                        var direction = new Vector3(0, 0, 1.5);
+                        direction.applyQuaternion(this.boulders[i].quaternion);
+                        this.boulders[i].applyCentralForce(direction);
+                    }
                 }
                 //reset Pitch and Yaw
                 this.mouseControls.pitch = 0;
@@ -484,6 +501,43 @@ var scenes;
                     break;
             }
         };
+        Play.prototype.determineLevels = function () {
+            //set the current level based on current score
+            if (this.score < 10) {
+                this.currentLevel = 1;
+            }
+            else if (this.score > 9 && this.score < 20) {
+                this.currentLevel = 2;
+            }
+            else if (this.score > 19) {
+                this.currentLevel = 3;
+            }
+            //set the current game object maximums based on current level
+            if (this.currentLevel == 1) {
+                this.numberOfBoulders = 4;
+                this.numberOfCoins = 2;
+                this.numberOfPlatforms = 2;
+            }
+            else if (this.currentLevel == 2) {
+                this.numberOfBoulders = 8;
+                this.numberOfCoins = 3;
+                this.numberOfPlatforms = 1;
+            }
+            else if (this.currentLevel == 3) {
+                this.numberOfBoulders = 16;
+                this.numberOfCoins = 4;
+                this.numberOfPlatforms = 0;
+            }
+            //Reset plaforms if the current level has changed
+            if (this.numberOfPlatforms != this.platforms.length) {
+                for (var i = 0; i < this.platforms.length; i++) {
+                    if (this.platforms[i] != undefined) {
+                        this.remove(this.platforms[i]);
+                        this.platforms.splice(i, 1);
+                    }
+                }
+            }
+        };
         /**
          * Camera Look function
          *
@@ -505,6 +559,7 @@ var scenes;
             this.checkControls();
             this.stage.update();
             this.checkSpawns();
+            this.determineLevels();
             if (!this.keyboardControls.paused) {
                 this.simulate();
             }
@@ -555,7 +610,7 @@ var scenes;
         };
         // Function that checks scores and game over (contantly looped)
         Play.prototype.isGameOver = function () {
-            if (this.health <= 0 || this.score >= 10) {
+            if (this.health <= 0 || this.score >= 30) {
                 return true;
             }
             else {
@@ -577,6 +632,7 @@ var scenes;
         Play.prototype.checkSpawns = function () {
             this.spawnBoulders();
             this.spawnCollecibleBall();
+            this.spawnPlatforms(); // add platforms to make game easier;
         };
         // Spawn boulders (do damage)
         Play.prototype.spawnBoulders = function () {
@@ -614,6 +670,24 @@ var scenes;
                     this.sphere.name = "CollectibleBall";
                     this.coins[i] = (this.sphere);
                     this.add(this.coins[i]);
+                }
+            }
+        };
+        Play.prototype.spawnPlatforms = function () {
+            for (var i = 0; i < this.numberOfPlatforms; i++) {
+                if (this.platforms[i] == undefined) {
+                    //coins can now drop anywhere :) 
+                    var xRand = this.getRandomInt(-20, 20);
+                    var zRand = this.getRandomInt(-20, 20);
+                    var cubeGeo = new CubeGeometry(3, 3, 4);
+                    var cubeMaterial = Physijs.createMaterial(new LambertMaterial({ color: 0xaa000a }), 0, 0); // George is an asshole about everything I do. </3
+                    var platform = new Physijs.BoxMesh(cubeGeo, cubeMaterial, 100);
+                    platform.position.set(xRand, 5, zRand);
+                    platform.receiveShadow = true;
+                    platform.castShadow = true;
+                    platform.name = "Platform";
+                    this.platforms[i] = (platform);
+                    this.add(this.platforms[i]);
                 }
             }
         };

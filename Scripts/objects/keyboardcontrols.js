@@ -27,9 +27,10 @@ var objects;
                 case 68:
                     this.moveRight = true;
                     break;
-                case 32:
-                    this.jump = true;
-                    break;
+                //case 32: /* Spacebar */
+                // this.jump = true;
+                //break;
+                //screw jumping
                 case 69:
                     this.activatePower = true;
                     break;
@@ -58,9 +59,6 @@ var objects;
                     break;
                 case 69:
                     this.activatePower = false;
-                    break;
-                case 32:
-                    this.jump = false;
                     break;
             }
         };
