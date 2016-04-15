@@ -1,6 +1,16 @@
 /// <reference path="_reference.ts"/>
 
-// MAIN GAME FILE
+/* 
+MAIN GAME FILE
+Source file	name:       game.ts
+Author’s name:	        George Savcheko and Jason Gunter
+Last modified by:       George Savchenko
+Date last modified:     2016-04-15
+Program	description:    Create an original 3D game. The game must have a Menu Scene, Instructions Scene, at least 3 
+                        Game-Level Scenes, and a Game-Over Scene. A scoring system must also be included.
+Revision history:       added music, fixed menu, commented code
+THREEJS Aliases
+*/
 
 // THREEJS Aliases
 import Scene = Physijs.Scene;
@@ -31,17 +41,10 @@ import CScreen = config.Screen;
 import Clock = THREE.Clock;
 
 // Setup a Web Worker for Physijs
-
-
-
-
 Physijs.scripts.worker = "/Scripts/lib/Physijs/physijs_worker.js";
 Physijs.scripts.ammo = "/Scripts/lib/Physijs/examples/js/ammo.js";
 
-
-
 // Game Variables
-
 // Message displayed to screen in index.html
 var screenMessage = document.getElementById("message");
 var messageWidth;
@@ -54,6 +57,7 @@ var camera: PerspectiveCamera;
 var play: scenes.Play;
 var menu: scenes.Menu;
 var over: scenes.Over;
+var rules: scenes.Rules;
 
 var stats: Stats;
 var canvas: HTMLElement;
@@ -67,10 +71,12 @@ var manifest = [
     {id: "yayChord", src:"../../Assets/audio/yaychord.wav"},
     {id: "gameover", src:"../../Assets/audio/gameover.mp3"},
     {id: "gamelost", src:"../../Assets/audio/gamelost.wav"},
-    { id: "StartButton", src: "../../Assets/images/StartButton.png"},
-    { id: "ExitButton", src: "../../Assets/images/ExitButton.png"},
-    { id: "InstructionsButton", src: "../../Assets/images/InstructionsButton.png"},
-    { id: "RestartButton", src: "../../Assets/images/RestartButton.png"}
+    {id: "background", src:"../../Assets/audio/background.mp3"}, // Eric Skiff Arpanauts
+    {id: "StartButton", src: "../../Assets/images/StartButton.png"},
+    {id: "ExitButton", src: "../../Assets/images/ExitButton.png"},
+    {id: "InstructionsButton", src: "../../Assets/images/InstructionsButton.png"},
+    {id: "RestartButton", src: "../../Assets/images/RestartButton.png"},
+    {id: "MenuButton", src: "../../Assets/images/MenuButton.png"}
 ];
 
 function preload(): void {
@@ -179,6 +185,12 @@ function changeScene(): void {
             // show the game OVER scene
             over = new scenes.Over();
             scene = over;
+            console.log("Starting OVER Scene");
+            break;
+        case config.Scene.RULES:
+            // show the game OVER scene
+            rules = new scenes.Rules();
+            scene = rules;
             console.log("Starting OVER Scene");
             break;
     }

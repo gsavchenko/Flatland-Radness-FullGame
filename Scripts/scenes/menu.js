@@ -3,6 +3,17 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
+/*
+MAIN GAME FILE
+Source file	name:       menu.ts
+Author’s name:	        George Savcheko and Jason Gunter
+Last modified by:       George Savchenko
+Date last modified:     2016-04-15
+Program	description:    Create an original 3D game. The game must have a Menu Scene, Instructions Scene, at least 3
+                        Game-Level Scenes, and a Game-Over Scene. A scoring system must also be included.
+Revision history:       added music, fixed menu, commented code
+THREEJS Aliases
+*/
 /**
  * @module scenes
  */
@@ -62,6 +73,7 @@ var scenes;
          * @return void
          */
         Menu.prototype.start = function () {
+            createjs.Sound.play("background", -1);
             this._gameLabel = new createjs.Text("Flatland Radness", "80px Motorwerk", "#ffffff");
             this._gameLabel.regX = this._gameLabel.getMeasuredWidth() * 0.5;
             this._gameLabel.regY = this._gameLabel.getMeasuredLineHeight() * 0.5;
@@ -113,8 +125,8 @@ var scenes;
                 event.target.alpha = 1.0;
             });
             this._instructionsButton.on("click", function (event) {
-                window.open('', '_self', '');
-                window.close();
+                currentScene = config.Scene.RULES;
+                changeScene();
             });
         };
         /**

@@ -1,3 +1,3 @@
-#COMP392-Lesson9
+# The Flatland Radness Game
 
-COMP392-Lesson9 for COMP392 - Advanced Graphics @ Centennial College
+The Flatland Radness Game - Advanced Graphics @ Centennial College

@@ -1,3 +1,15 @@
+/* 
+MAIN GAME FILE
+Source file	name:       game.ts
+Author’s name:	        George Savcheko and Jason Gunter
+Last modified by:       George Savchenko
+Date last modified:     2016-04-15
+Program	description:    Create an original 3D game. The game must have a Menu Scene, Instructions Scene, at least 3 
+                        Game-Level Scenes, and a Game-Over Scene. A scoring system must also be included.
+Revision history:       added music, fixed menu, commented code
+THREEJS Aliases
+*/
+
 /**
  * @module scenes
  */
@@ -61,8 +73,8 @@ module scenes {
         public start(): void {
             this._gameOverLabel = new createjs.Text(
                 "GAME OVER",
-                "80px Consolas",
-                "#000000");
+                "80px Motorwerk",
+                "#ffffff");
             this._gameOverLabel.regX = this._gameOverLabel.getMeasuredWidth() * 0.5;
             this._gameOverLabel.regY = this._gameOverLabel.getMeasuredLineHeight() * 0.5;
             this._gameOverLabel.x = config.Screen.WIDTH * 0.5;

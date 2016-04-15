@@ -1,13 +1,13 @@
 {
-  "name": "comp392-lesson10",
+  "name": "The Flatland Radness Game",
   "authors": [
-    "Tom Tsiliopoulos <tsiliopoulos@hotmail.com>"
+    "George Savchenko, Jason Gunter"
   ],
-  "description": "COMP392 Lesson 9 for Advanced Graphics",
+  "description": "The Flatland Radness Game for Advanced Graphics",
   "main": "",
   "moduleType": [],
   "license": "MIT",
-  "homepage": "https://github.com/CentennialCollege/COMP392-Lesson10",
+  "homepage": "https://github.com/gsavchenko/Flatland-Radness-FullGame",
   "ignore": [
     "**/.*",
     "node_modules",

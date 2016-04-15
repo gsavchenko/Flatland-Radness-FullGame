@@ -1,114 +1,126 @@
-/*
+/* 
 MAIN GAME FILE
 Source file	name:       game.ts
 Author’s name:	        George Savcheko and Jason Gunter
 Last modified by:       George Savchenko
 Date last modified:     2016-04-15
-Program	description:    Create an original 3D game. The game must have a Menu Scene, Instructions Scene, at least 3
+Program	description:    Create an original 3D game. The game must have a Menu Scene, Instructions Scene, at least 3 
                         Game-Level Scenes, and a Game-Over Scene. A scoring system must also be included.
 Revision history:       added music, fixed menu, commented code
 THREEJS Aliases
 */
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+
 /**
  * @module scenes
  */
-var scenes;
-(function (scenes) {
+module scenes {
     /**
      * This class instantiates the game over scene object
-     *
+     * 
      * @class Over
      * @extends scenes.Scene
      */
-    var Over = (function (_super) {
-        __extends(Over, _super);
+    export class Rules extends scenes.Scene {
+        private _blocker: HTMLElement;
+        private _stage: createjs.Stage;
+        private _gameOverLabel: createjs.Text;
+        private _menuButton: createjs.Bitmap;
+
         /**
          * Empty Contructor
-         *
+         * 
          * @constructor
          */
-        function Over() {
-            _super.call(this);
+        constructor() {
+            super();
+
             this._initialize();
             this.start();
         }
-        Over.prototype._setupCanvas = function () {
+
+        private _setupCanvas(): void {
             canvas.style.width = "100%";
             canvas.setAttribute("height", config.Screen.HEIGHT.toString());
             canvas.style.backgroundColor = "#ffffff";
-        };
+        }
+
         /**
          * This method sets up default values for class member variables
          * and objects
-         *
+         * 
          * @method _initialize
          * @return void
          */
-        Over.prototype._initialize = function () {
+        private _initialize(): void {
             // Create to HTMLElements
             this._blocker = document.getElementById("blocker");
             this._blocker.style.display = "none";
+
             // setup canvas for menu scene
             this._setupCanvas();
             // setup a stage on the canvas
             this._stage = new createjs.Stage(canvas);
             this._stage.enableMouseOver(20);
-        };
+        }
+
+
         /**
          * The start method is the main method for the scene class
-         *
+         * 
          * @method start
          * @return void
          */
-        Over.prototype.start = function () {
-            this._gameOverLabel = new createjs.Text("GAME OVER", "80px Motorwerk", "#ffffff");
+        public start(): void {
+            this._gameOverLabel = new createjs.Text(
+                "1. Avoid bears and lava \n 2. Collect coins, some give you powerups \n 3. Press E to use your levitation ability",
+               "30px Motorwerk",
+                "#ffffff");
             this._gameOverLabel.regX = this._gameOverLabel.getMeasuredWidth() * 0.5;
             this._gameOverLabel.regY = this._gameOverLabel.getMeasuredLineHeight() * 0.5;
-            this._gameOverLabel.x = config.Screen.WIDTH * 0.5;
-            this._gameOverLabel.y = config.Screen.HEIGHT * 0.5;
+            this._gameOverLabel.x = config.Screen.WIDTH * 0.5 + 500;
+            this._gameOverLabel.y = config.Screen.HEIGHT * 0.5 - 100;
             this._stage.addChild(this._gameOverLabel);
-            this._restartButton = new createjs.Bitmap(assets.getResult("RestartButton"));
-            this._restartButton.regX = this._restartButton.getBounds().width * 0.5;
-            this._restartButton.regY = this._restartButton.getBounds().height * 0.5;
-            this._restartButton.x = config.Screen.WIDTH * 0.5;
-            this._restartButton.y = (config.Screen.HEIGHT * 0.5) + 100;
-            this._stage.addChild(this._restartButton);
-            this._restartButton.on("mouseover", function (event) {
+
+            this._menuButton = new createjs.Bitmap(assets.getResult("MenuButton"));
+            this._menuButton.regX = this._menuButton.getBounds().width * 0.5;
+            this._menuButton.regY = this._menuButton.getBounds().height * 0.5;
+            this._menuButton.x = config.Screen.WIDTH * 0.5;
+            this._menuButton.y = (config.Screen.HEIGHT * 0.5) + 100;
+            this._stage.addChild(this._menuButton);
+
+            this._menuButton.on("mouseover", (event: createjs.MouseEvent) => {
                 event.target.alpha = 0.7;
             });
-            this._restartButton.on("mouseout", function (event) {
+
+            this._menuButton.on("mouseout", (event: createjs.MouseEvent) => {
                 event.target.alpha = 1.0;
             });
-            this._restartButton.on("click", function (event) {
-                currentScene = config.Scene.PLAY;
+
+            this._menuButton.on("click", (event: createjs.MouseEvent) => {
+                currentScene = config.Scene.MENU;
                 changeScene();
             });
-        };
+        }
+
         /**
          * The update method updates the animation loop and other objects
-         *
+         * 
          * @method update
          * @return void
          */
-        Over.prototype.update = function () {
+        public update(): void {
             this._stage.update();
-        };
+        }
+
         /**
          * The resize method is a procedure that sets variables and objects on screen resize
-         *
+         * 
          * @method resize
          * @return void
          */
-        Over.prototype.resize = function () {
+        public resize(): void {
             this._setupCanvas();
-        };
-        return Over;
-    })(scenes.Scene);
-    scenes.Over = Over;
-})(scenes || (scenes = {}));
-//# sourceMappingURL=over.js.map
+        }
+
+    }
+}

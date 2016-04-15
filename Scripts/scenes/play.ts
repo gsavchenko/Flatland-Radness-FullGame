@@ -1,3 +1,15 @@
+/* 
+MAIN GAME FILE
+Source file	name:       game.ts
+Author’s name:	        George Savcheko and Jason Gunter
+Last modified by:       George Savchenko
+Date last modified:     2016-04-15
+Program	description:    Create an original 3D game. The game must have a Menu Scene, Instructions Scene, at least 3 
+                        Game-Level Scenes, and a Game-Over Scene. A scoring system must also be included.
+Revision history:       added music, fixed menu, commented code
+THREEJS Aliases
+*/
+
 /**
  * The Scenes module is a namespace to reference all scene objects
  * 
