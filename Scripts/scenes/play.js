@@ -97,7 +97,6 @@ var scenes;
             this.blocker.style.display = "block";
             // setup canvas for menu scene
             this._setupCanvas();
-            this.updatePlayerStats(); // display player stats (health/score) on initialization   
             this.prevTime = 0;
             this.stage = new createjs.Stage(canvas);
             // setup a THREE.JS Clock object
@@ -412,8 +411,6 @@ var scenes;
          */
         Play.prototype.start = function () {
             var _this = this;
-            // Set Up Scoreboard
-            this.updatePlayerStats();
             //check to see if pointerlock is supported
             this.havePointerLock = 'pointerLockElement' in document ||
                 'mozPointerLockElement' in document ||
@@ -440,10 +437,6 @@ var scenes;
             this.name = "Main";
             this.fog = new THREE.Fog(0xffffff, 0, 750);
             this.setGravity(new THREE.Vector3(0, -10, 0));
-            // start simulation
-            /*
-            this.addEventListener('update', this._simulateScene);
-            console.log("Start Simulation"); */
             // Add Spot Light to the scene
             this.addSpotLight();
             // Ground Object
@@ -453,6 +446,7 @@ var scenes;
             // Collision Check
             this.player.addEventListener('collision', function (eventObject) {
                 if (eventObject.name === "Ground" || eventObject.name === "Lava") {
+                    this.updatePlayerStats();
                     this.isGrounded = true;
                     createjs.Sound.play("land");
                 }
@@ -471,13 +465,6 @@ var scenes;
                 }
                 if (eventObject.name === "CollectibleBall") {
                     this.score = this.score + 1;
-                    /* George Please Fix
-                    if (this.score < 10) {
-                        this.flashFeedback();
-                    } else {
-                        this.giveFeedback();
-                        createjs.Sound.play("gameover");
-                    } */
                     this.SetPowerUp(eventObject.material);
                     var indexId = this.coins.indexOf(eventObject);
                     this.remove(this.coins[indexId]);
@@ -607,6 +594,7 @@ var scenes;
                 // Play the Game Over Scene
                 currentScene = config.Scene.OVER;
                 changeScene();
+                this.displayMessage("Final Score: " + this.score);
             }
         };
         /**

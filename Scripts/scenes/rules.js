@@ -66,11 +66,11 @@ var scenes;
          * @return void
          */
         Rules.prototype.start = function () {
-            this._gameOverLabel = new createjs.Text("1. Avoid bears and lava \n 2. Collect coins, some give you powerups \n 3. Press E to use your levitation ability", "30px Motorwerk", "#ffffff");
+            this._gameOverLabel = new createjs.Text("1. Avoid bears, they drain health \n 2. The ground turns to lava periodically, don't touch it \n 3. Press E to use your levitation ability \n 4. Collect coins to progress your score and level (some give you power ups!) ", "30px Arial Black", "#ffffff");
             this._gameOverLabel.regX = this._gameOverLabel.getMeasuredWidth() * 0.5;
             this._gameOverLabel.regY = this._gameOverLabel.getMeasuredLineHeight() * 0.5;
-            this._gameOverLabel.x = config.Screen.WIDTH * 0.5 + 500;
-            this._gameOverLabel.y = config.Screen.HEIGHT * 0.5 - 100;
+            this._gameOverLabel.x = config.Screen.WIDTH * 0.5 + 1200;
+            this._gameOverLabel.y = config.Screen.HEIGHT * 0.5 - 200;
             this._stage.addChild(this._gameOverLabel);
             this._menuButton = new createjs.Bitmap(assets.getResult("MenuButton"));
             this._menuButton.regX = this._menuButton.getBounds().width * 0.5;

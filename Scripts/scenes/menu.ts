@@ -6,7 +6,7 @@ Last modified by:       George Savchenko
 Date last modified:     2016-04-15
 Program	description:    Create an original 3D game. The game must have a Menu Scene, Instructions Scene, at least 3 
                         Game-Level Scenes, and a Game-Over Scene. A scoring system must also be included.
-Revision history:       added music, fixed menu, commented code
+Revision history:       music no longer overlaps when switching scenes
 THREEJS Aliases
 */
 /**
@@ -31,6 +31,7 @@ module scenes {
         private _startButton: createjs.Bitmap;
         private _exitButton: createjs.Bitmap;
         private _instructionsButton: createjs.Bitmap;
+        private static isPlaying = false;
 
         /**
          * Empty Constructor - calls _initialize and start methods
@@ -82,16 +83,20 @@ module scenes {
          */
         public start(): void {
             
-            createjs.Sound.play("background", -1);
+            if (!Menu.isPlaying)
+            {
+                    createjs.Sound.play("background").loop = -1;
+                    Menu.isPlaying= true;
+            }
             
             this._gameLabel = new createjs.Text(
                 "Flatland Radness",
-                "80px Motorwerk",
+                "80px Arial Black",
                 "#ffffff");
             this._gameLabel.regX = this._gameLabel.getMeasuredWidth() * 0.5;
             this._gameLabel.regY = this._gameLabel.getMeasuredLineHeight() * 0.5;
             this._gameLabel.x = config.Screen.WIDTH * 0.5;
-            this._gameLabel.y = config.Screen.HEIGHT * 0.5;
+            this._gameLabel.y = config.Screen.HEIGHT * 0.5 - 200;
             this._stage.addChild(this._gameLabel);
 
             this._startButton = new createjs.Bitmap(assets.getResult("StartButton"));

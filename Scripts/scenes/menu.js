@@ -11,7 +11,7 @@ Last modified by:       George Savchenko
 Date last modified:     2016-04-15
 Program	description:    Create an original 3D game. The game must have a Menu Scene, Instructions Scene, at least 3
                         Game-Level Scenes, and a Game-Over Scene. A scoring system must also be included.
-Revision history:       added music, fixed menu, commented code
+Revision history:       fixed overlapping music from switching scenes
 THREEJS Aliases
 */
 /**
@@ -73,12 +73,15 @@ var scenes;
          * @return void
          */
         Menu.prototype.start = function () {
-            createjs.Sound.play("background", -1);
-            this._gameLabel = new createjs.Text("Flatland Radness", "80px Motorwerk", "#ffffff");
+            if (!Menu.isPlaying) {
+                createjs.Sound.play("background").loop = -1;
+                Menu.isPlaying = true;
+            }
+            this._gameLabel = new createjs.Text("Flatland Radness", "80px Arial Black", "#ffffff");
             this._gameLabel.regX = this._gameLabel.getMeasuredWidth() * 0.5;
             this._gameLabel.regY = this._gameLabel.getMeasuredLineHeight() * 0.5;
             this._gameLabel.x = config.Screen.WIDTH * 0.5;
-            this._gameLabel.y = config.Screen.HEIGHT * 0.5;
+            this._gameLabel.y = config.Screen.HEIGHT * 0.5 - 200;
             this._stage.addChild(this._gameLabel);
             this._startButton = new createjs.Bitmap(assets.getResult("StartButton"));
             this._startButton.regX = this._startButton.getBounds().width * 0.5;
@@ -147,6 +150,7 @@ var scenes;
         Menu.prototype.resize = function () {
             this._setupCanvas();
         };
+        Menu.isPlaying = false;
         return Menu;
     })(scenes.Scene);
     scenes.Menu = Menu;

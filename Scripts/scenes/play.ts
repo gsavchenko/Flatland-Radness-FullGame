@@ -6,7 +6,7 @@ Last modified by:       George Savchenko
 Date last modified:     2016-04-15
 Program	description:    Create an original 3D game. The game must have a Menu Scene, Instructions Scene, at least 3 
                         Game-Level Scenes, and a Game-Over Scene. A scoring system must also be included.
-Revision history:       added music, fixed menu, commented code
+Revision history:       game over now displays final score
 THREEJS Aliases
 */
 
@@ -136,9 +136,7 @@ module scenes {
             this.blocker.style.display = "block";
 
             // setup canvas for menu scene
-            this._setupCanvas();
-
-            this.updatePlayerStats(); // display player stats (health/score) on initialization   
+            this._setupCanvas();  
 
             this.prevTime = 0;
             this.stage = new createjs.Stage(canvas);
@@ -483,9 +481,7 @@ module scenes {
          * @return void
          */
         public start(): void {
-            // Set Up Scoreboard
-            this.updatePlayerStats();
-
+           
             //check to see if pointerlock is supported
             this.havePointerLock = 'pointerLockElement' in document ||
                 'mozPointerLockElement' in document ||
@@ -522,11 +518,6 @@ module scenes {
             this.fog = new THREE.Fog(0xffffff, 0, 750);
             this.setGravity(new THREE.Vector3(0, -10, 0));
 
-            // start simulation
-            /*
-            this.addEventListener('update', this._simulateScene);
-            console.log("Start Simulation"); */
-
             // Add Spot Light to the scene
             this.addSpotLight();
 
@@ -539,6 +530,7 @@ module scenes {
             // Collision Check
             this.player.addEventListener('collision', function(eventObject) {
                 if (eventObject.name === "Ground" || eventObject.name === "Lava") {
+                    this.updatePlayerStats();
                     this.isGrounded = true;
                     createjs.Sound.play("land");
                 }
@@ -558,14 +550,6 @@ module scenes {
 
                 if (eventObject.name === "CollectibleBall") {
                     this.score = this.score + 1;
-                    
-                    /* George Please Fix
-                    if (this.score < 10) {
-                        this.flashFeedback();
-                    } else {
-                        this.giveFeedback();
-                        createjs.Sound.play("gameover");
-                    } */
 
                     this.SetPowerUp(eventObject.material);
 
@@ -711,6 +695,7 @@ module scenes {
                 // Play the Game Over Scene
                 currentScene = config.Scene.OVER;
                 changeScene();
+                this.displayMessage("Final Score: " + this.score);
             }
         }
 

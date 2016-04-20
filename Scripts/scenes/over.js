@@ -66,7 +66,7 @@ var scenes;
          * @return void
          */
         Over.prototype.start = function () {
-            this._gameOverLabel = new createjs.Text("GAME OVER", "80px Motorwerk", "#ffffff");
+            this._gameOverLabel = new createjs.Text("GAME OVER", "80px Arial Black", "#ffffff");
             this._gameOverLabel.regX = this._gameOverLabel.getMeasuredWidth() * 0.5;
             this._gameOverLabel.regY = this._gameOverLabel.getMeasuredLineHeight() * 0.5;
             this._gameOverLabel.x = config.Screen.WIDTH * 0.5;

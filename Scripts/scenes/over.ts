@@ -73,7 +73,7 @@ module scenes {
         public start(): void {
             this._gameOverLabel = new createjs.Text(
                 "GAME OVER",
-                "80px Motorwerk",
+                "80px Arial Black",
                 "#ffffff");
             this._gameOverLabel.regX = this._gameOverLabel.getMeasuredWidth() * 0.5;
             this._gameOverLabel.regY = this._gameOverLabel.getMeasuredLineHeight() * 0.5;
